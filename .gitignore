@@ -10,3 +10,7 @@ npm-debug.log
 # Docker
 Dockerfile
 docker-compose.yml
+# live price data
+public/*.json
+
+public/hourly.json
