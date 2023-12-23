@@ -51,7 +51,59 @@ function beautify(number, plusSignFront = true, percent = false, dec = 2) {
   }
   return parseFloat(parseFloat(number).toFixed(dec)).toLocaleString('fr')
 }
+// Function to import prices from CoinGecko
+function safeGuardImportJSON(urls = [], sheet = "", per_page = 250) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheet);
 
+  var counting_success = 0;
+
+  urls
+//    .map((url, i) => `${url}&per_page=${per_page}&page=${i + 1}`)
+    .map((url, i) => `${url}`)
+    .forEach(function (url, i) {
+
+
+      var status = false;
+      var counting = 0;
+
+      while (!(status) && counting < 3) {
+        try {
+          var dataAll = ImportJSON(url, undefined, "noTruncate");
+          console.log(i, counting);
+          console.log(url);
+
+          if (!(dataAll.error)) { // console.log(dataAll);
+
+            status = true;
+            counting_success += 1;
+
+            var schema = ['Id', 'Symbol', 'Name', 'Image', 'Current Price', 'Market Cap', 'Market Cap Rank', 'Fully Diluted Valuation', 'Total Volume', 'High 24h', 'Low 24h', 'Price Change 24h', 'Price Change Percentage 24h', 'Market Cap Change 24h', 'Market Cap Change Percentage 24h', 'Circulating Supply', 'Total Supply', 'Max Supply', 'Ath', 'Ath Change Percentage', 'Ath Date', 'Atl', 'Atl Change Percentage', 'Atl Date', 'Roi', 'Last Updated', 'Price Change Percentage 1h In Currency', 'Price Change Percentage 24h In Currency', 'Price Change Percentage 30d In Currency', 'Price Change Percentage 7d In Currency', 'Roi Times', 'Roi Currency', 'Roi Percentage'];
+
+            var header = dataAll[0];
+
+            if (JSON.stringify(schema) != JSON.stringify(header)) {
+              var sortarray = header.map(h => schema.indexOf(h));
+              dataAll = dataAll.map(function (row) { return sortarray.map(index => row[index]) });
+            }
+            if (i > 0) { dataAll = dataAll.slice(1) };
+
+
+            sheet
+              .getRange(1 + (i * per_page) + (i > 0 ? 1 : 0), 1, dataAll.length, dataAll[0].length)
+              .setValues(dataAll);
+          }
+          break;
+
+        } catch (e) { console.log(e) }
+
+        counting++;
+        Utilities.sleep(1500);
+      }
+    });
+  return counting_success
+}
+// Function to import gains from ethstaker.tax. Uses different method and schema from the other function
 //function safeGuardImportGainsJSON(urls = [], sheet = "", per_page = 250) {
 function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_page = 250) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
