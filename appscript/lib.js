@@ -51,8 +51,58 @@ function beautify(number, plusSignFront = true, percent = false, dec = 2) {
   }
   return parseFloat(parseFloat(number).toFixed(dec)).toLocaleString('fr')
 }
+function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheet);
+
+  var counting_success = 0;
+
+  urls
+    .map((url, i) => `${url}`)
+    .forEach(function (url, i) {
+
+
+      var status = false;
+      var counting = 0;
+
+      while (!(status) && counting < 3) {
+        try {
+          var dataIn = ImportJSON(url, undefined, "noTruncate, noInherit, debugLocation");
+          const dataOut = [];
+          // Validators come in as a single element array
+          console.log(i, counting);
+          console.log(url);
+          if (!(dataIn.error)) { // console.log(dataAll);
+            status = true;
+            counting_success += 1;
+            var header = ['Validator 1', 'Validator 2'];
+            var list;
+            var items;
+            list = JSON.stringify(dataIn[1]);
+            items = list.replace(/\"|\[|\]/g ,"");
+            dataOut[0] = header;
+            dataOut[1] = items.split(",")
+            //for (let i = 1; i < dataIn[0].length; i++) {
+            //  dataOut[0][i] = header
+            //  console.log(dataOut[0], dataOut[1]);
+            // }
+            }
+
+
+            sheet.
+            getRange(1,1,dataOut.length, dataOut[0].length).
+            setValues(dataOut);
+
+        } catch (e) { console.log(e) }
+
+        counting++;
+        Utilities.sleep(1500);
+      }
+    });
+  return counting_success
+}
 // Function to import prices from CoinGecko
-function safeGuardImportJSON(urls = [], sheet = "", per_page = 250) {
+function safeGuardImportPricesJSON(urls = [], sheet = "", per_page = 250) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(sheet);
 

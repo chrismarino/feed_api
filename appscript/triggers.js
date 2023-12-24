@@ -1,8 +1,9 @@
 function onOpen() {
   SpreadsheetApp.getUi().createMenu("Cryptofolio")
     .addItem("Create Triggers", "createTriggers")
-    .addItem("Refresh crypto prices", "cgDataManualRefresh")
+    .addItem("Refresh crypto prices", "cgPricesManualRefresh")
     .addItem("Refresh crypto gains", "cgGainsManualRefresh")
+    .addItem("Get Validators", "cgValidatorsManualRefresh")
     .addItem("Discord - Test connection", "testDiscord")
     .addItem("Discord - send reporting", "dailyAlertTrigger")
     .addToUi();
@@ -17,7 +18,7 @@ function createTriggers() {
 
 function initTriggers() {
   // Trigger every 2 hours.
-  ScriptApp.newTrigger('cgDataRefresh')
+  ScriptApp.newTrigger('cgPricesRefresh')
     .timeBased()
     .everyMinutes(10)
     .create();

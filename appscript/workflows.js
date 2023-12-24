@@ -1,20 +1,51 @@
 // @ts-nocheck
-function cgDataRefresh() {
+function cgValidatorsRefresh() {
 
   var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
   if (!(currency)) { currency = "cad" }
 
   var urls = [
-    `http://67.188.178.24:5001/gains.json`
+    'https://ethstaker.tax/api/v1/indexes_for_eth1_address?eth1_address=0x635D06a61a36566003D71428F1895e146CdBD54E'
   ];
 
-  var count = safeGuardImportJSON(urls, "db_coingecko");
+  var count = safeGuardImportValidatorsJSON(urls, "db_validators");
   return count;
 
 }
 
-function cgDataManualRefresh() {
-  var count = cgDataRefresh();
+function cgValidatorsManualRefresh() {
+  var count = cgValidatorsRefresh();
+  var ui = SpreadsheetApp.getUi();
+
+  switch (count) {
+    case 0:
+      uiMessage = "Hmmmm....something went wrong.";
+      break;
+    case 1:
+      uiMessage = "Success! Updated the Validator list";
+      break;
+    default:
+      uiMessage = "More than one url was provided. This is not supported yet.";
+  }
+
+  ui.alert("Price Refresh Status", uiMessage, ui.ButtonSet.OK);
+}
+function cgPricesRefresh() {
+
+  var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
+  if (!(currency)) { currency = "cad" }
+
+  var urls = [
+    `http://67.188.178.24:5001/prices.json`
+  ];
+
+  var count = safeGuardImportPricesJSON(urls, "db_coingecko");
+  return count;
+
+}
+
+function cgPricesManualRefresh() {
+  var count = cgPricesRefresh();
   var ui = SpreadsheetApp.getUi();
 
   switch (count) {
@@ -22,10 +53,10 @@ function cgDataManualRefresh() {
       uiMessage = "Nothing was received from Coingecko. This can happen, try again in a few seconds";
       break;
     case 1:
-      uiMessage = "New crypto prices were partially refreshed. Try again in a few seconds";
+      uiMessage = "Updated the Price DB with a single fetch";
       break;
     default:
-      uiMessage = "Success! Your Top500 crypto data has been refreshed";
+      uiMessage = "Hmmm...took more than one fetch to get the data.";
   }
 
   ui.alert("Price Refresh Status", uiMessage, ui.ButtonSet.OK);
