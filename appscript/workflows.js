@@ -5,8 +5,7 @@ function cgDataRefresh() {
   if (!(currency)) { currency = "cad" }
 
   var urls = [
-    `http://67.188.178.24:5001/prices.json`,
-    `http://67.188.178.24:5001/prices.json`
+    `http://67.188.178.24:5001/gains.json`
   ];
 
   var count = safeGuardImportJSON(urls, "db_coingecko");
@@ -42,7 +41,9 @@ function cgGainsRefresh() {
   ];
 
 
-  var data = {  "validator_indexes": [  810338, 983397  ],  "start_date": "2023-01-01",  "end_date": "2023-12-22"}
+ var data = {  "validator_indexes": [  983397, 810338  ],  "start_date": "2023-01-01",  "end_date": "2024-12-31"}
+//var data = {  "validator_indexes": [ 439318, 581807, 584216, 728249, 1025169  ],  "start_date": "2022-01-01",  "end_date": "2024-12-31"}
+  
   var payload = JSON.stringify(data)
   //var count = safeGuardImportGainsJSON(urls, "db_gains");
   var count = safeGuardImportGainsJSONviaPOST(urls, payload, "db_gains");

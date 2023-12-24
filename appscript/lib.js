@@ -69,7 +69,7 @@ function safeGuardImportJSON(urls = [], sheet = "", per_page = 250) {
 
       while (!(status) && counting < 3) {
         try {
-          var dataAll = ImportJSON(url, undefined, "noTruncate");
+          var dataAll = ImportJSON(url, undefined, "noTruncate, noInherit, debugLocation");
           console.log(i, counting);
           console.log(url);
 
@@ -122,7 +122,22 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
 
       while (!(status) && counting < 3) {
         try {
-          var dataAll = ImportJSONViaPost(url,  payload, "", "", "noTruncate");
+          var dataAll = ImportJSONViaPost(url,  payload, "", "", "noTruncate, noInherit, debugLocation");
+          //Check to see that there is only one row per day.
+          var dupe = dataAll[1][5];
+           for (let i = 1; i < dataAll.length; i++) {
+             if (dataAll[i][5] == dupe){
+               //found a dupe, save it
+               dupe = dataAll[i][5]
+               dataAll[i][5] = "Dupe Withdrawl Date";
+               dataAll[i][6] = ""; // null out the dupe withdrawl
+               console.log(dataAll[i][5],i); 
+             }
+               else {
+                 dupe = dataAll[i][5]; 
+           }
+             }      
+         
           console.log(i, counting);
           console.log(url);
 
