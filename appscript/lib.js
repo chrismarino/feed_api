@@ -12,6 +12,7 @@ function updateCurrencyFormat() {
   var shRowTemplate = ss.getSheetByName("--do not remove--");
   var uiCurrency = ss.getRange("fiat_currency").getValue();
 
+
   var currencyFormat = {
     "USD": "[$$]#,##0.00",
     "CAD": "[$$]#,##0.00",
@@ -52,16 +53,20 @@ function beautify(number, plusSignFront = true, percent = false, dec = 2) {
   return parseFloat(parseFloat(number).toFixed(dec)).toLocaleString('fr')
 }
 function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
+/**
+  * This function takes the url of a JSON file and processes the list of Validators for display on the db_validators sheets. The raw JSON is returned
+  * where it is then used to fetch the gains. 
+*/
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(sheet);
-
+  var validator_list;
+  var validator_list_string;
   var counting_success = 0;
-
+  var dataIn;
+  var returnArray = [];
   urls
     .map((url, i) => `${url}`)
     .forEach(function (url, i) {
-
-
       var status = false;
       var counting = 0;
 
@@ -76,30 +81,29 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
             status = true;
             counting_success += 1;
             var header = ['Validator 1', 'Validator 2'];
-            var list;
             var items;
-            list = JSON.stringify(dataIn[1]);
-            items = list.replace(/\"|\[|\]/g ,"");
+            validator_list = dataIn[1];
+            validator_list_string = JSON.stringify(dataIn[1]);
+            items = validator_list_string.replace(/\"|\[|\]/g ,"");
             dataOut[0] = header;
             dataOut[1] = items.split(",")
-            //for (let i = 1; i < dataIn[0].length; i++) {
-            //  dataOut[0][i] = header
-            //  console.log(dataOut[0], dataOut[1]);
-            // }
             }
-
-
-            sheet.
-            getRange(1,1,dataOut.length, dataOut[0].length).
-            setValues(dataOut);
-
+//            sheet.
+//            getRange(1,1,dataOut.length, dataOut[1].length).
+//            setValues(dataOut);
+// Need an array of numbers to construct the payload for the POST
+        dataOut[1].forEach( (v,i) => {
+          returnArray[i] = Number(dataOut[1][i]);
+        });
+        returnArray[0] = Number(dataOut[1][0]);
+        returnArray[1] = Number(dataOut[1][1]);        
         } catch (e) { console.log(e) }
 
         counting++;
         Utilities.sleep(1500);
       }
     });
-  return counting_success
+  return returnArray
 }
 // Function to import prices from CoinGecko
 function safeGuardImportPricesJSON(urls = [], sheet = "", per_page = 250) {

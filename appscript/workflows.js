@@ -1,15 +1,16 @@
 // @ts-nocheck
 function cgValidatorsRefresh() {
-
+/**
+ * This function will fetch the list of validators from the ethstaker.tax API. It return an array of validator indexes, that then
+ * is be used to fetch the gains for each validator.
+ */
   var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
+  var nodeAddress = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("node_address").getValue();
   if (!(currency)) { currency = "cad" }
-
-  var urls = [
-    'https://ethstaker.tax/api/v1/indexes_for_eth1_address?eth1_address=0x635D06a61a36566003D71428F1895e146CdBD54E'
-  ];
-
-  var count = safeGuardImportValidatorsJSON(urls, "db_validators");
-  return count;
+  var urlstring = 'https://ethstaker.tax/api/v1/indexes_for_eth1_address?eth1_address='
+  var urls = [urlstring.concat(nodeAddress) ];
+  var validator_list = safeGuardImportValidatorsJSON(urls, "db_validators");
+  return validator_list;
 
 }
 
@@ -28,7 +29,7 @@ function cgValidatorsManualRefresh() {
       uiMessage = "More than one url was provided. This is not supported yet.";
   }
 
-  ui.alert("Price Refresh Status", uiMessage, ui.ButtonSet.OK);
+  ui.alert("Validator Refresh Status", uiMessage, ui.ButtonSet.OK);
 }
 function cgPricesRefresh() {
 
@@ -63,24 +64,19 @@ function cgPricesManualRefresh() {
 }
 
 function cgGainsRefresh() {
-
+/**
+ * This function will fetch the gains for each validator in the list of validators. It calls cgValidatorsRefresh() to get the list of validators
+ * directy and does not pull the list from the sheet. This is to ensure that the list of validators is always up to date.
+ */
   var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
   if (!(currency)) { currency = "usd" }
 
-  var urls = [
-    `https://ethstaker.tax/api/v2/rewards`
-  ];
-
-
- var data = {  "validator_indexes": [  983397, 810338  ],  "start_date": "2023-01-01",  "end_date": "2024-12-31"}
-//var data = {  "validator_indexes": [ 439318, 581807, 584216, 728249, 1025169  ],  "start_date": "2022-01-01",  "end_date": "2024-12-31"}
-  
+  var urls = [  `https://ethstaker.tax/api/v2/rewards` ];
+  var validator_indexes = cgValidatorsRefresh();
+  var data = {  "validator_indexes": validator_indexes,  "start_date": "2023-01-01",  "end_date": "2024-12-31"}
   var payload = JSON.stringify(data)
-  //var count = safeGuardImportGainsJSON(urls, "db_gains");
   var count = safeGuardImportGainsJSONviaPOST(urls, payload, "db_gains");
-  //function ImportJSONViaPost(url, payload, fetchOptions, query, parseOptions) {
   return count;
-
 }
 
 function cgGainsManualRefresh() {
@@ -98,7 +94,7 @@ function cgGainsManualRefresh() {
       uiMessage = "Loaded more than one Minipool Gains";
   }
 
-  ui.alert("Price Refresh Status", uiMessage, ui.ButtonSet.OK);
+  ui.alert("Gains Refresh Status", uiMessage, ui.ButtonSet.OK);
 }
 
 function testDiscord() {
