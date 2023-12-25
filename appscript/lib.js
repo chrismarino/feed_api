@@ -53,10 +53,10 @@ function beautify(number, plusSignFront = true, percent = false, dec = 2) {
   return parseFloat(parseFloat(number).toFixed(dec)).toLocaleString('fr')
 }
 function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
-/**
-  * This function takes the url of a JSON file and processes the list of Validators for display on the db_validators sheets. The raw JSON is returned
-  * where it is then used to fetch the gains. 
-*/
+  /**
+    * This function takes the url of a JSON file and processes the list of Validators for display on the db_validators sheets. The raw JSON is returned
+    * where it is then used to fetch the gains. 
+  */
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(sheet);
   var validator_list;
@@ -80,25 +80,25 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
           if (!(dataIn.error)) { // console.log(dataAll);
             status = true;
             counting_success += 1;
-            var header = ['Validator 1', 'Validator 2'];
             var items;
             validator_list = dataIn[1];
             validator_list_string = JSON.stringify(dataIn[1]);
-            items = validator_list_string.replace(/\"|\[|\]/g ,"");
-            dataOut[0] = header;
+            items = validator_list_string.replace(/\"|\[|\]/g, "");
+            dataOut[0] = items.split(",") // just put data in both, will overwrite with header string below
             dataOut[1] = items.split(",")
-            }
-//            sheet.
-//            getRange(1,1,dataOut.length, dataOut[1].length).
-//            setValues(dataOut);
-// Need an array of numbers to construct the payload for the POST
-        dataOut[1].forEach( (v,i) => {
-          returnArray[i] = Number(dataOut[1][i]);
-        });
-        returnArray[0] = Number(dataOut[1][0]);
-        returnArray[1] = Number(dataOut[1][1]);        
+            dataOut[1].forEach((v, i) => {
+              dataOut[0][i] = "Validator"
+              dataOut[1][i] = items.split(",")[i]
+            });
+          }
+          sheet.
+            getRange(1, 1, dataOut.length, dataOut[0].length).
+            setValues(dataOut);
+          // Need an array of numbers to construct the payload for the POST
+          dataOut[1].forEach((v, i) => {
+            returnArray[i] = Number(dataOut[1][i]);
+          });
         } catch (e) { console.log(e) }
-
         counting++;
         Utilities.sleep(1500);
       }
@@ -113,7 +113,7 @@ function safeGuardImportPricesJSON(urls = [], sheet = "", per_page = 250) {
   var counting_success = 0;
 
   urls
-//    .map((url, i) => `${url}&per_page=${per_page}&page=${i + 1}`)
+    //    .map((url, i) => `${url}&per_page=${per_page}&page=${i + 1}`)
     .map((url, i) => `${url}`)
     .forEach(function (url, i) {
 
@@ -166,7 +166,7 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
   var counting_success = 0;
 
   urls
-//    .map((url, i) => `${url}&per_page=${per_page}&page=${i + 1}`)
+    //    .map((url, i) => `${url}&per_page=${per_page}&page=${i + 1}`)
     .map((url, i) => `${url}`)
     .forEach(function (url, i) {
 
@@ -176,22 +176,22 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
 
       while (!(status) && counting < 3) {
         try {
-          var dataAll = ImportJSONViaPost(url,  payload, "", "", "noTruncate, noInherit, debugLocation");
+          var dataAll = ImportJSONViaPost(url, payload, "", "", "noTruncate, noInherit, debugLocation");
           //Check to see that there is only one row per day.
           var dupe = dataAll[1][5];
-           for (let i = 1; i < dataAll.length; i++) {
-             if (dataAll[i][5] == dupe){
-               //found a dupe, save it
-               dupe = dataAll[i][5]
-               dataAll[i][5] = "Dupe Withdrawl Date";
-               dataAll[i][6] = ""; // null out the dupe withdrawl
-               console.log(dataAll[i][5],i); 
-             }
-               else {
-                 dupe = dataAll[i][5]; 
-           }
-             }      
-         
+          for (let i = 1; i < dataAll.length; i++) {
+            if (dataAll[i][5] == dupe) {
+              //found a dupe, save it
+              dupe = dataAll[i][5]
+              dataAll[i][5] = "Dupe Withdrawl Date";
+              dataAll[i][6] = ""; // null out the dupe withdrawl
+              console.log(dataAll[i][5], i);
+            }
+            else {
+              dupe = dataAll[i][5];
+            }
+          }
+
           console.log(i, counting);
           console.log(url);
 
@@ -202,9 +202,9 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
 
             // New schema for rewards info...
             var schema = [
-              'Validator Rewards Validator Index', 
-              'Validator Rewards Consensus Layer Rewards Date', 
-              'Validator Rewards Consensus Layer Rewards Amount Wei', 
+              'Validator Rewards Validator Index',
+              'Validator Rewards Consensus Layer Rewards Date',
+              'Validator Rewards Consensus Layer Rewards Amount Wei',
               'Validator Rewards Execution Layer Rewards Date',
               'Validator Rewards Execution Layer Rewards Amount Wei',
               'Validator Rewards Withdrawals Date',
