@@ -79,7 +79,7 @@ function cgGainsRefresh() {
   var data = { "validator_indexes": validator_indexes, "start_date": "2023-01-01", "end_date": "2024-12-31" }
   var payload = JSON.stringify(data)
   var count = safeGuardImportGainsJSONviaPOST(urls, payload, "db_gains");
-// Update the gains sheet with the new number of validators
+  // Update the gains sheet with the new number of validators
   cgResetGains(validator_indexes.length);
   return count;
 }
@@ -164,41 +164,34 @@ function dailyAlertTrigger() {
     postMessageToDiscord(undefined, payload_portfolio);
   }
 }
-          // sheet.
-          //   getRange(1, 1, dataOut.length, dataOut[0].length).
-          //   setValues(dataOut);
+
 function cgClearGains() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sourceRange = ss.getRangeByName('gain_calculations').getFormulas()
   var currentMPCount = ss.getRangeByName('minipool_count').getValue();
   var targetSheet = ss.getSheetByName('gains');
   //Clear out the existing values in the sheet
-  var trows = 24 // the number of rows in the template
-  var tcols = 1 // the number of columns in the temmplate
+  var trows = 19 // the number of rows in the template
+  var ccols = 25 - currentMPCount // the number of columns to clear
   var rowPosition = 1 // the start position to clear
-  var colPosition = 2 // the start position to clear
-  for (var i = 1; i < currentMPCount; i++) {
-    targetSheet.getRange(rowPosition, colPosition, trows, tcols).clearContent();
-    colPosition++
-  }
-    return;
+  var colPosition = 2 + currentMPCount // the start position to clear
+  targetSheet.getRange(rowPosition, colPosition, trows, ccols).clearContent();
+  return;
 }
-  function cgResetGains(){
-  validator_count = 10;
-  // Copy the values from the source sheet to the target sheet
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sourceRange = ss.getRangeByName('gain_calculations').getFormulas()
-  var currentMPCount = ss.getRangeByName('minipool_count').getValue();
-  var targetSheet = ss.getSheetByName('gains');
+
+function cgResetGains() {
+  // Copies a full sheet of validator calculations from the template (max 25). 
+  // cgClearGains is called later to clear out the excess columns
   //The template dimensions...
-  var trows = 24 // the number of rows in the template
-  var tcols = 1 // the number of columns in the temmplate
   var rowPosition = 1 // the start position to clear
   var colPosition = 2 // the start position to clear
-  for (var i = 0; i < validator_count; i++) {
-    targetSheet.getRange(rowPosition, colPosition, trows, tcols).setValues(sourceRange);
-    colPosition++
-  }
-
+  var trows = 19 // the number of rows in the template
+  var tcols = 25 // the number of columns in the temmplate
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+// Copy the values from the source sheet to the target sheet
+  var sourceRange = ss.getRangeByName('gain_calculations').getFormulas()
+  var sourceFormats = ss.getRangeByName('gain_calculations').getNumberFormats()
+  var targetSheet = ss.getSheetByName('gains');
+  targetSheet.getRange(rowPosition, colPosition, trows, tcols).setValues(sourceRange)
+  targetSheet.getRange(rowPosition, colPosition, trows, tcols).setNumberFormats(sourceFormats);
   return;
 }
