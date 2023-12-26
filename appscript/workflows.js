@@ -1,15 +1,17 @@
 // @ts-nocheck
 function cgValidatorsRefresh() {
-/**
- * This function will fetch the list of validators from the ethstaker.tax API. It return an array of validator indexes, that then
- * is be used to fetch the gains for each validator.
- */
+  /**
+   * This function will fetch the list of validators from the ethstaker.tax API. It return an array of validator indexes, that then
+   * is be used to fetch the gains for each validator. Also updated the minipool count used for other sheet calculations.
+   */
   var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
   var nodeAddress = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("node_address").getValue();
   if (!(currency)) { currency = "cad" }
   var urlstring = 'https://ethstaker.tax/api/v1/indexes_for_eth1_address?eth1_address='
-  var urls = [urlstring.concat(nodeAddress) ];
+  var urls = [urlstring.concat(nodeAddress)];
   var validator_list = safeGuardImportValidatorsJSON(urls, "db_validators");
+  var validator_count = validator_list.length
+  SpreadsheetApp.getActiveSpreadsheet().getRangeByName("minipool_count").setValue(validator_count)
   return validator_list;
 
 }
@@ -64,18 +66,21 @@ function cgPricesManualRefresh() {
 }
 
 function cgGainsRefresh() {
-/**
- * This function will fetch the gains for each validator in the list of validators. It calls cgValidatorsRefresh() to get the list of validators
- * directy and does not pull the list from the sheet. This is to ensure that the list of validators is always up to date.
- */
+  /**
+   * This function will clear out the validator gain data in the 'gains' sheet then fetch the current list of validators on the node. 
+   * From this list, it pulls the gain history for each validator and puts it in the "db_gains" sheet. It then calls updateGains to 
+   * insert the current validator set into the 'gains' sheet.
+   */
+  cgClearGains();
   var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
   if (!(currency)) { currency = "usd" }
-
-  var urls = [  `https://ethstaker.tax/api/v2/rewards` ];
+  var urls = [`https://ethstaker.tax/api/v2/rewards`];
   var validator_indexes = cgValidatorsRefresh();
-  var data = {  "validator_indexes": validator_indexes,  "start_date": "2023-01-01",  "end_date": "2024-12-31"}
+  var data = { "validator_indexes": validator_indexes, "start_date": "2023-01-01", "end_date": "2024-12-31" }
   var payload = JSON.stringify(data)
   var count = safeGuardImportGainsJSONviaPOST(urls, payload, "db_gains");
+// Update the gains sheet with the new number of validators
+  cgResetGains(validator_indexes.length);
   return count;
 }
 
@@ -121,6 +126,17 @@ function storeRows2SheetTrigger() {
   storeRows2Sheet(globalMetrics, "db_history");
 }
 
+function storeCol2SheetTrigger() {
+
+  var globalMetrics = prepareDataRange("gain_calculations", [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11]);
+  var sourceRange = ss.getRangeByName(sourceRangeName).getValues();
+
+  sourceRange = filterRowsRange(sourceRange);
+
+  sourceRange = resizeColsRange(sourceRange, selectCols);
+
+  storeCols2Sheet(globalMetrics, "gains_template");
+}
 
 function dailyAlertTrigger() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -147,4 +163,42 @@ function dailyAlertTrigger() {
     var payload_portfolio = getTemplatePayload(cryptoData, "daily_portfolio");
     postMessageToDiscord(undefined, payload_portfolio);
   }
+}
+          // sheet.
+          //   getRange(1, 1, dataOut.length, dataOut[0].length).
+          //   setValues(dataOut);
+function cgClearGains() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sourceRange = ss.getRangeByName('gain_calculations').getFormulas()
+  var currentMPCount = ss.getRangeByName('minipool_count').getValue();
+  var targetSheet = ss.getSheetByName('gains');
+  //Clear out the existing values in the sheet
+  var trows = 24 // the number of rows in the template
+  var tcols = 1 // the number of columns in the temmplate
+  var rowPosition = 1 // the start position to clear
+  var colPosition = 2 // the start position to clear
+  for (var i = 1; i < currentMPCount; i++) {
+    targetSheet.getRange(rowPosition, colPosition, trows, tcols).clearContent();
+    colPosition++
+  }
+    return;
+}
+  function cgResetGains(){
+  validator_count = 10;
+  // Copy the values from the source sheet to the target sheet
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sourceRange = ss.getRangeByName('gain_calculations').getFormulas()
+  var currentMPCount = ss.getRangeByName('minipool_count').getValue();
+  var targetSheet = ss.getSheetByName('gains');
+  //The template dimensions...
+  var trows = 24 // the number of rows in the template
+  var tcols = 1 // the number of columns in the temmplate
+  var rowPosition = 1 // the start position to clear
+  var colPosition = 2 // the start position to clear
+  for (var i = 0; i < validator_count; i++) {
+    targetSheet.getRange(rowPosition, colPosition, trows, tcols).setValues(sourceRange);
+    colPosition++
+  }
+
+  return;
 }
