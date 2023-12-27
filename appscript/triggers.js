@@ -3,9 +3,8 @@ function onOpen() {
     .addItem("Create Triggers", "createTriggers")
     .addItem("Refresh crypto prices", "cgPricesManualRefresh")
     .addItem("Refresh crypto gains", "cgGainsManualRefresh")
-    .addItem("Get Validators", "cgValidatorsManualRefresh")
-    .addItem("Discord - Test connection", "testDiscord")
-    .addItem("Discord - send reporting", "dailyAlertTrigger")
+//    .addItem("Discord - Test connection", "testDiscord")
+//    .addItem("Discord - send reporting", "dailyAlertTrigger")
     .addToUi();
 }
 

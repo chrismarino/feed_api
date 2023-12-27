@@ -69,7 +69,7 @@ function cgPricesManualRefresh() {
 function cgGainsRefresh() {
   /**
    * This function will reset the validator gain data in the 'gains' sheet then fetch the current list of validators on the node. 
-   * From this list, it pulls the gain history for each validator and puts it in the "db_gains" sheet. It then calls updateGains to 
+   * From this list, it pulls the gain history for each validator and puts it in a clean "db_gains" sheet. It then calls updateGains to 
    * insert the current validator set into the 'gains' sheet.
    */
   cgResetGains();
@@ -80,6 +80,8 @@ function cgGainsRefresh() {
   // Update the gains sheet by removing the columns that don't have validators
   cgClearUnusedGains(validator_indexes.length);
   var data = { "validator_indexes": validator_indexes, "start_date": "2023-01-01", "end_date": "2024-12-31" }
+  // Clear the db_gains sheet.
+  SpreadsheetApp.getActiveSpreadsheet().getRangeByName('db_gains').clearContent();
   var payload = JSON.stringify(data)
   var count = safeGuardImportGainsJSONviaPOST(urls, payload, "db_gains");
 
@@ -174,7 +176,7 @@ function cgClearUnusedGains() {
   var currentMPCount = ss.getRangeByName('minipool_count').getValue();
   var targetSheet = ss.getSheetByName('gains');
   //Clear out the existing values in the sheet
-  var trows = 19 // the number of rows in the template
+  var trows = 20 // the number of rows in the template
   var ccols = 25 - currentMPCount // the number of columns to clear
   var rowPosition = 1 // the start position to clear
   var colPosition = 2 + currentMPCount // the start position to clear
@@ -186,9 +188,9 @@ function cgResetGains() {
   // Copies a full sheet of validator calculations from the template (max 25). 
   // cgClearGains is called later to clear out the excess columns
   //The template dimensions...
-  var rowPosition = 1 // the start position to clear
+  var rowPosition = 3 // the start position to clear
   var colPosition = 2 // the start position to clear
-  var trows = 19 // the number of rows in the template
+  var trows = 18 // the number of rows in the template
   var tcols = 25 // the number of columns in the temmplate
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 // Copy the values from the source sheet to the target sheet

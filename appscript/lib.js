@@ -84,12 +84,12 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
             dataOut[0] = items.split(",") // just put data in both, will overwrite with header string below
             dataOut[1] = items.split(",")
             dataOut[1].forEach((v, i) => {
-              dataOut[0][i] = items.split(",")[i] // only need the number, no header necessary.
-              dataOut[1][i] = "Dummy To be Overwritten" // must be at least 2 rows...
+              dataOut[0][i] = "Validator ID" // must be at least 2 rows. Adding a Header
+              dataOut[1][i] = items.split(",")[i] 
             });
           }
           dataOut[0].forEach((v, i) => {
-            returnArray[i] = Number(dataOut[0][i]);
+            returnArray[i] = Number(dataOut[1][i]);
           });
           sheet.
             getRange(1, 2, dataOut.length, dataOut[1].length).
