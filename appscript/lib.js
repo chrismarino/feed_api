@@ -59,10 +59,8 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
   */
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(sheet);
-  var validator_list;
   var validator_list_string;
-  var counting_success = 0;
-  var dataIn;
+  var dataOut = [];
   var returnArray = [];
   urls
     .map((url, i) => `${url}`)
@@ -73,13 +71,12 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
       while (!(status) && counting < 3) {
         try {
           var dataIn = ImportJSON(url, undefined, "noTruncate, noInherit, debugLocation");
-          const dataOut = [];
+//          const dataOut = [];
           // Validators come in as a single element array
           console.log(i, counting);
           console.log(url);
           if (!(dataIn.error)) { // console.log(dataAll);
             status = true;
-            counting_success += 1;
             var items;
             validator_list = dataIn[1];
             validator_list_string = JSON.stringify(dataIn[1]);
@@ -87,17 +84,18 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
             dataOut[0] = items.split(",") // just put data in both, will overwrite with header string below
             dataOut[1] = items.split(",")
             dataOut[1].forEach((v, i) => {
-              dataOut[0][i] = "Validator"
-              dataOut[1][i] = items.split(",")[i]
+              dataOut[0][i] = items.split(",")[i] // only need the number, no header necessary.
+              dataOut[1][i] = "Dummy To be Overwritten" // must be at least 2 rows...
             });
           }
-          sheet.
-            getRange(1, 1, dataOut.length, dataOut[0].length).
-            setValues(dataOut);
-          // Need an array of numbers to construct the payload for the POST
-          dataOut[1].forEach((v, i) => {
-            returnArray[i] = Number(dataOut[1][i]);
+          dataOut[0].forEach((v, i) => {
+            returnArray[i] = Number(dataOut[0][i]);
           });
+          sheet.
+            getRange(1, 2, dataOut.length, dataOut[1].length).
+            setValues(dataOut); // Insert just the validators into the gains sheet.
+          // Need an array of numbers to construct the payload for the POST
+
         } catch (e) { console.log(e) }
         counting++;
         Utilities.sleep(1500);
@@ -185,7 +183,7 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
               dupe = dataAll[i][5]
               dataAll[i][5] = "Dupe Withdrawl Date";
               dataAll[i][6] = ""; // null out the dupe withdrawl
-              console.log(dataAll[i][5], i);
+//              console.log(dataAll[i][5], i);
             }
             else {
               dupe = dataAll[i][5];

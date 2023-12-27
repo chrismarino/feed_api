@@ -6,10 +6,11 @@ function cgValidatorsRefresh() {
    */
   var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
   var nodeAddress = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("node_address").getValue();
-  if (!(currency)) { currency = "cad" }
+  if (!(currency)) { currency = "usd" }
   var urlstring = 'https://ethstaker.tax/api/v1/indexes_for_eth1_address?eth1_address='
   var urls = [urlstring.concat(nodeAddress)];
-  var validator_list = safeGuardImportValidatorsJSON(urls, "db_validators");
+  // Validator list get pulled and posted to the top of the gains sheet, which makes all the gains calculations.
+  var validator_list = safeGuardImportValidatorsJSON(urls, "gains");
   var validator_count = validator_list.length
   SpreadsheetApp.getActiveSpreadsheet().getRangeByName("minipool_count").setValue(validator_count)
   return validator_list;
@@ -67,20 +68,21 @@ function cgPricesManualRefresh() {
 
 function cgGainsRefresh() {
   /**
-   * This function will clear out the validator gain data in the 'gains' sheet then fetch the current list of validators on the node. 
+   * This function will reset the validator gain data in the 'gains' sheet then fetch the current list of validators on the node. 
    * From this list, it pulls the gain history for each validator and puts it in the "db_gains" sheet. It then calls updateGains to 
    * insert the current validator set into the 'gains' sheet.
    */
-  cgClearGains();
+  cgResetGains();
   var currency = SpreadsheetApp.getActiveSpreadsheet().getRangeByName("fiat_currency").getValue();
   if (!(currency)) { currency = "usd" }
   var urls = [`https://ethstaker.tax/api/v2/rewards`];
   var validator_indexes = cgValidatorsRefresh();
+  // Update the gains sheet by removing the columns that don't have validators
+  cgClearUnusedGains(validator_indexes.length);
   var data = { "validator_indexes": validator_indexes, "start_date": "2023-01-01", "end_date": "2024-12-31" }
   var payload = JSON.stringify(data)
   var count = safeGuardImportGainsJSONviaPOST(urls, payload, "db_gains");
-  // Update the gains sheet with the new number of validators
-  cgResetGains(validator_indexes.length);
+
   return count;
 }
 
@@ -165,7 +167,9 @@ function dailyAlertTrigger() {
   }
 }
 
-function cgClearGains() {
+function cgClearUnusedGains() {
+  // The ResetGains functions fills out the whole spreadsheet and we need to remove the columns that 
+  // don't have validator ID.
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var currentMPCount = ss.getRangeByName('minipool_count').getValue();
   var targetSheet = ss.getSheetByName('gains');
