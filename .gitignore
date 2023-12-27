@@ -11,5 +11,6 @@ npm-debug.log
 Dockerfile
 docker-compose.yml
 # live price data
+*.log
+*.json
 public/*.json
-public/rewards_data (2).csv
