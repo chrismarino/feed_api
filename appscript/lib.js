@@ -70,8 +70,8 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
 
       while (!(status) && counting < 3) {
         try {
-          var dataIn = ImportJSON(url, undefined, "noTruncate, noInherit, debugLocation");
-//          const dataOut = [];
+          var dataIn = ImportJSON(url, undefined, "noTruncate,allHeaders");
+          //          const dataOut = [];
           // Validators come in as a single element array
           console.log(i, counting);
           console.log(url);
@@ -85,7 +85,7 @@ function safeGuardImportValidatorsJSON(urls = [], sheet = "", per_page = 250) {
             dataOut[1] = items.split(",")
             dataOut[1].forEach((v, i) => {
               dataOut[0][i] = "Validator ID" // must be at least 2 rows. Adding a Header
-              dataOut[1][i] = items.split(",")[i] 
+              dataOut[1][i] = items.split(",")[i]
             });
           }
           dataOut[0].forEach((v, i) => {
@@ -121,7 +121,7 @@ function safeGuardImportPricesJSON(urls = [], sheet = "", per_page = 250) {
 
       while (!(status) && counting < 3) {
         try {
-          var dataAll = ImportJSON(url, undefined, "noTruncate, noInherit, debugLocation");
+          var dataAll = ImportJSON(url, undefined, "noTruncate,noInherit,allHeaders");
           console.log(i, counting);
           console.log(url);
 
@@ -159,6 +159,7 @@ function safeGuardImportPricesJSON(urls = [], sheet = "", per_page = 250) {
 //function safeGuardImportGainsJSON(urls = [], sheet = "", per_page = 250) {
 function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_page = 250) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ui = SpreadsheetApp.getUi();
   var sheet = ss.getSheetByName(sheet);
 
   var counting_success = 0;
@@ -174,7 +175,7 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
 
       while (!(status) && counting < 3) {
         try {
-          var dataAll = ImportJSONViaPost(url, payload, "", "", "noTruncate, noInherit, debugLocation");
+          var dataAll = ImportJSONViaPost(url, payload, "", "", "noTruncate,allHeaders,rawHeaders");
           //Check to see that there is only one row per day.
           var dupe = dataAll[1][5];
           for (let i = 1; i < dataAll.length; i++) {
@@ -183,7 +184,7 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
               dupe = dataAll[i][5]
               dataAll[i][5] = "Dupe Withdrawl Date";
               dataAll[i][6] = ""; // null out the dupe withdrawl
-//              console.log(dataAll[i][5], i);
+              //              console.log(dataAll[i][5], i);
             }
             else {
               dupe = dataAll[i][5];
@@ -200,34 +201,43 @@ function safeGuardImportGainsJSONviaPOST(urls = [], payload, sheet = "", per_pag
 
             // New schema for rewards info...
             var schema = [
-              'Validator Rewards Validator Index',
-              'Validator Rewards Consensus Layer Rewards Date',
-              'Validator Rewards Consensus Layer Rewards Amount Wei',
-              'Validator Rewards Execution Layer Rewards Date',
-              'Validator Rewards Execution Layer Rewards Amount Wei',
-              'Validator Rewards Withdrawals Date',
-              'Validator Rewards Withdrawals Amount Wei',
-              'Validator Rewards Fees Date',
-              'Validator Rewards Fees Fee Value Wei',
-              'Validator Rewards Bonds Date',
-              'Validator Rewards Bonds Bond Value Wei',
-              'Validator Rewards Execution Layer Rewards',
-              'Rocket Pool Node Rewards Date',
-              'Rocket Pool Node Rewards Amount Wei',
-              'Rocket Pool Node Rewards Node Address',
-              'Rocket Pool Node Rewards Amount Rpl'];
+              '/validator_rewards/validator_index',
+              '/validator_rewards/consensus_layer_rewards/date',
+              '/validator_rewards/consensus_layer_rewards/amount_wei',
+              '/validator_rewards/execution_layer_rewards/date',
+              '/validator_rewards/execution_layer_rewards/amount_wei',
+              '/validator_rewards/withdrawals/date',
+              '/validator_rewards/withdrawals/amount_wei',
+              '/validator_rewards/fees/date',
+              '/validator_rewards/fees/fee_value_wei',
+              '/validator_rewards/bonds/date',
+              '/validator_rewards/bonds/bond_value_wei',
+              //  '/validator_rewards/consensus_layer_rewards',
+              '/validator_rewards/execution_layer_rewards',
+              //  '/validator_rewards/withdrawals',
+              '/rocket_pool_node_rewards/date',
+              '/rocket_pool_node_rewards/amount_wei',
+              '/rocket_pool_node_rewards/node_address',
+              '/rocket_pool_node_rewards/amount_rpl'
+            ];
             var header = dataAll[0];
 
             if (JSON.stringify(schema) != JSON.stringify(header)) {
-              var sortarray = header.map(h => schema.indexOf(h));
+              //console.log("Whoa, the header doesn't matchthe schema")   // Some columns are missing. Need to build the array...
+              //Check each element to see if it there, if not add it to the end of the.
+              schema.forEach((v, i) => {
+                if (!(header.includes(schema[i]))) {
+                  header[header.length] = schema[i] // add a new col to the header.
+                }
+              })
+              var sortarray = schema.map(h => header.indexOf(h));
               dataAll = dataAll.map(function (row) { return sortarray.map(index => row[index]) });
             }
-            if (i > 0) { dataAll = dataAll.slice(1) };
-
-
+            if (i > 0) { dataAll = dataAll.slice(1) };           
+            console.log(header)
             sheet
               .getRange(1 + (i * per_page) + (i > 0 ? 1 : 0), 1, dataAll.length, dataAll[0].length)
-              .setValues(dataAll);
+              .setValues(dataAll.sort());
           }
           break;
 

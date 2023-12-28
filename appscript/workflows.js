@@ -79,9 +79,9 @@ function cgGainsRefresh() {
   var validator_indexes = cgValidatorsRefresh();
   // Update the gains sheet by removing the columns that don't have validators
   cgClearUnusedGains(validator_indexes.length);
-  var data = { "validator_indexes": validator_indexes, "start_date": "2023-01-01", "end_date": "2024-12-31" }
+  var data = { "validator_indexes": validator_indexes, "start_date": "2021-01-01", "end_date": "2024-12-31" }
   // Clear the db_gains sheet.
-  SpreadsheetApp.getActiveSpreadsheet().getRangeByName('db_gains').clearContent();
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName('db_gains').getRange("A:AC").clearContent();
   var payload = JSON.stringify(data)
   var count = safeGuardImportGainsJSONviaPOST(urls, payload, "db_gains");
 
